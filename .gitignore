@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.venv/
+.venv-1/
+.env
+.env.*
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Database and local runtime
+*.db
+*.sqlite3
+backend/ucip.db
+backend/.env
+backend/.env.*
+detector/.env
+detector/.env.*
+frontend/.env
+frontend/.env.*
+
+# IDE and OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
