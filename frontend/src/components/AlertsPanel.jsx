@@ -2,7 +2,7 @@ const SEVERITY_COLORS = { high: "#ef4444", medium: "#f59e0b", low: "#64748b" };
 
 export default function AlertsPanel({ alerts, newAlertCount, onAcknowledge, onResolve }) {
   return (
-    <div className="panel alerts-panel">
+    <div className="panel alerts-panel" id="alerts-panel">
       <div className="panel-header">
         <h3>🚨 Alerts</h3>
         <span className="badge">{newAlertCount ?? alerts.filter((a) => a.status === "new").length} new</span>
@@ -26,9 +26,9 @@ export default function AlertsPanel({ alerts, newAlertCount, onAcknowledge, onRe
             {a.status !== "resolved" && (
               <div className="alert-actions">
                 {a.status === "new" && (
-                  <button className="btn btn-sm" onClick={() => onAcknowledge(a.id)}>Acknowledge</button>
+                  <button type="button" className="btn btn-sm" aria-label={`Acknowledge alert ${a.entity_value}`} onClick={() => onAcknowledge(a.id)}>Acknowledge</button>
                 )}
-                <button className="btn btn-sm btn-primary" onClick={() => onResolve(a.id)}>Resolve</button>
+                <button type="button" className="btn btn-sm btn-primary" aria-label={`Resolve alert ${a.entity_value}`} onClick={() => onResolve(a.id)}>Resolve</button>
               </div>
             )}
           </div>

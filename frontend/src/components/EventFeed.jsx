@@ -1,10 +1,10 @@
 export default function EventFeed({ events }) {
   return (
-    <div className="panel">
+    <div className="panel recent-detections">
       <div className="panel-header">
         <h3>📋 Recent Detections</h3>
       </div>
-      <div className="table-wrap">
+      <div className="table-wrap recent-detections-table-wrap">
         <table className="event-table">
           <thead>
             <tr>

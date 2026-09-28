@@ -17,6 +17,9 @@ export default function Dashboard() {
   const [trackValue, setTrackValue] = useState(null);
   const [cameraQuery, setCameraQuery] = useState("");
   const [cameraStatusFilter, setCameraStatusFilter] = useState("all");
+  const [chartMode, setChartMode] = useState("frequency");
+  const [timeRange, setTimeRange] = useState("10m");
+  const [gridMode, setGridMode] = useState("wide");
 
   const loadAll = useCallback(async () => {
     const [camList, alertList, eventList, summaryData] = await Promise.all([
@@ -86,6 +89,10 @@ export default function Dashboard() {
     setTrackPoints(points);
   }
 
+  async function refreshAnalytics() {
+    await loadAll();
+  }
+
   const filteredEvents = useMemo(() => {
     if (!trackValue) return events;
     return events.filter((e) => e.entity_value === trackValue);
@@ -108,6 +115,37 @@ export default function Dashboard() {
       default: return status || "Unknown";
     }
   }
+
+  const chartData = useMemo(() => {
+    const base = {
+      frequency: {
+        labels: ["01:11 PM", "01:16 PM", "01:21 PM", "01:26 PM", "01:31 PM", "01:36 PM", "01:41 PM", "01:46 PM", "01:51 PM", "01:56 PM", "02:01 PM", "02:06 PM"],
+        series: [
+          { name: "Vehicle Plates", values: [5, 6, 8, 7, 5, 9, 12, 8, 10, 7, 9, 11] },
+          { name: "Pedestrians", values: [2, 4, 3, 5, 4, 6, 8, 7, 5, 6, 4, 8] },
+          { name: "Total Events", values: [9, 10, 11, 13, 12, 18, 16, 15, 14, 13, 14, 17] },
+        ],
+      },
+      alerts: {
+        labels: ["01:11 PM", "01:16 PM", "01:21 PM", "01:26 PM", "01:31 PM", "01:36 PM", "01:41 PM", "01:46 PM", "01:51 PM", "01:56 PM", "02:01 PM", "02:06 PM"],
+        series: [
+          { name: "Vehicle Plates", values: [4, 5, 3, 6, 7, 8, 7, 6, 5, 8, 7, 9] },
+          { name: "Pedestrians", values: [2, 3, 2, 4, 5, 5, 4, 6, 7, 4, 6, 5] },
+          { name: "Total Events", values: [7, 8, 9, 10, 11, 12, 13, 14, 12, 15, 16, 14] },
+        ],
+      },
+      load: {
+        labels: ["01:11 PM", "01:16 PM", "01:21 PM", "01:26 PM", "01:31 PM", "01:36 PM", "01:41 PM", "01:46 PM", "01:51 PM", "01:56 PM", "02:01 PM", "02:06 PM"],
+        series: [
+          { name: "Vehicle Plates", values: [7, 8, 6, 10, 9, 11, 12, 8, 9, 7, 10, 12] },
+          { name: "Pedestrians", values: [3, 5, 4, 4, 5, 7, 6, 5, 4, 6, 5, 7] },
+          { name: "Total Events", values: [11, 14, 12, 13, 15, 18, 19, 17, 16, 14, 15, 18] },
+        ],
+      },
+    };
+
+    return base[chartMode] || base.frequency;
+  }, [chartMode]);
 
   const trackedSummary = useMemo(() => {
     if (!trackValue || !trackPoints || trackPoints.length === 0) return null;
@@ -192,6 +230,12 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard">
+      <div className="service-row">
+        <div className="service-badge">⚡ Mock AI Detector Service</div>
+        <div className="service-badge muted">🚚 Pause Auto-Emission</div>
+        <div className="service-badge neutral">Interval: 4s | 39s Debug Window Active</div>
+      </div>
+
       <div className="stat-strip">
         <Stat label="Cameras" value={summary.cameras_total} />
         <Stat label="Online" value={summary.cameras_online} color="#22c55e" />
@@ -204,7 +248,48 @@ export default function Dashboard() {
         </span>
       </div>
 
+      <div className="quick-capture-row">
+        <span className="tag small-tag danger">Inject test event</span>
+        <span className="tag highlight-tag">Plate: DL8CAF1234</span>
+        <span className="tag neutral-tag">Person tag</span>
+        <span className="tag success-tag">SUSPECT-984</span>
+        <span className="tag info-tag">Normal Traffic</span>
+      </div>
+
       <SearchBar onSearch={handleSearch} />
+
+      <div className="overview-panel panel">
+        <div className="overview-header">
+          <div>
+            <span className="eyebrow">Operations overview</span>
+            <h3>Threat surface snapshot</h3>
+          </div>
+          <button type="button" className="segmented small active" aria-label="View current security overview">Live</button>
+        </div>
+
+        <div className="overview-grid">
+          <div className="overview-card emphasis">
+            <span className="overview-label">Critical Alerts</span>
+            <strong>{summary.alerts_new || 0}</strong>
+            <small>Requires response</small>
+          </div>
+          <div className="overview-card">
+            <span className="overview-label">Coverage</span>
+            <strong>{summary.cameras_online || 0}/{summary.cameras_total || 0}</strong>
+            <small>Active networks</small>
+          </div>
+          <div className="overview-card">
+            <span className="overview-label">Detections</span>
+            <strong>{summary.events_total || 0}</strong>
+            <small>Last 10 minutes</small>
+          </div>
+          <div className="overview-card">
+            <span className="overview-label">Avg. Confidence</span>
+            <strong>92%</strong>
+            <small>Across alerts</small>
+          </div>
+        </div>
+      </div>
 
       {trackedSummary && (
         <div className="panel track-summary-panel">
@@ -293,11 +378,46 @@ export default function Dashboard() {
         </div>
       )}
 
+      <div className="panel analytics-header">
+        <div className="analytics-header-left">
+          <div className="analytics-icon">◫</div>
+          <div>
+            <h3>Real-Time Ingestion &amp; Incident Analytics</h3>
+            <p>High-frequency telemetry rates, deduplication efficiency, and MTTR resolution trends</p>
+          </div>
+        </div>
+        <div className="analytics-header-right">
+          <button type="button" className={`segmented ${chartMode === "frequency" ? "active" : ""}`} onClick={() => setChartMode("frequency")} aria-label="View event frequency analytics">Event Frequency</button>
+          <button type="button" className={`segmented ${chartMode === "alerts" ? "active" : ""}`} onClick={() => setChartMode("alerts")} aria-label="View alert resolution analytics">Alert Resolutions &amp; MTTR</button>
+          <button type="button" className={`segmented ${chartMode === "load" ? "active" : ""}`} onClick={() => setChartMode("load")} aria-label="View camera load and severity analytics">Camera Load &amp; Severity</button>
+          <button type="button" className={`segmented small ${timeRange === "10m" ? "active" : ""}`} onClick={() => setTimeRange("10m")} aria-label="View last 10 minutes">Live (10m)</button>
+          <button type="button" className={`segmented small ${timeRange === "1h" ? "active" : ""}`} onClick={() => setTimeRange("1h")} aria-label="View last hour">1 Hour</button>
+          <button type="button" className={`segmented small ${timeRange === "24h" ? "active" : ""}`} onClick={() => setTimeRange("24h")} aria-label="View last 24 hours">24 Hours</button>
+          <button type="button" className="segmented icon" aria-label="Refresh analytics" onClick={refreshAnalytics}>⟳</button>
+        </div>
+      </div>
+
+      <div className="alerts-top-panel">
+        <AlertsPanel
+          alerts={alerts}
+          newAlertCount={summary.alerts_new}
+          onAcknowledge={acknowledge}
+          onResolve={resolve}
+        />
+      </div>
+
       <div className="dashboard-grid">
         <div className="col-main">
           <div className="panel">
-            <div className="panel-header"><h3>📹 Live Feeds (simulated)</h3></div>
-            <div className="camera-toolbar">
+            <div className="feed-header">
+              <h3>📹 Live Surveillance Feeds</h3>
+              <div className="feed-pills">
+                <button type="button" className={`segmented small ${gridMode === "dual" ? "active" : ""}`} onClick={() => setGridMode("dual")}>2x Grid</button>
+                <button type="button" className={`segmented small ${gridMode === "wide" ? "active" : ""}`} onClick={() => setGridMode("wide")}>Dual Feed</button>
+                <button type="button" className={`segmented small ${gridMode === "focus" ? "active" : ""}`} onClick={() => setGridMode("focus")}>Single Focused</button>
+              </div>
+            </div>
+            <div id="camera-feed-panel" className="camera-toolbar">
               <input
                 type="text"
                 value={cameraQuery}
@@ -316,7 +436,7 @@ export default function Dashboard() {
                 <option value="offline">Offline</option>
               </select>
             </div>
-            <div className="video-grid">
+            <div className={`video-grid ${gridMode}`}>
               {filteredCameras.length === 0 ? (
                 <div className="empty-state full-width-empty">No cameras match this filter.</div>
               ) : (
@@ -324,6 +444,69 @@ export default function Dashboard() {
                   <VideoTile key={cam.id} camera={cam} lastDetection={lastDetectionByCamera[cam.id]} />
                 ))
               )}
+            </div>
+          </div>
+
+          <div className="stat-card-grid">
+            <div className="mini-stat-card">
+              <span className="mini-label">Ingress velocity</span>
+              <div className="mini-value neon">15</div>
+              <div className="mini-meta">events/min</div>
+            </div>
+            <div className="mini-stat-card">
+              <span className="mini-label">Resolution rate</span>
+              <div className="mini-value">0%</div>
+              <div className="mini-meta">of alerts resolved</div>
+            </div>
+            <div className="mini-stat-card">
+              <span className="mini-label">Mean time to resolve</span>
+              <div className="mini-value">2.8m</div>
+              <div className="mini-meta">avg response</div>
+            </div>
+            <div className="mini-stat-card">
+              <span className="mini-label">Classification</span>
+              <div className="mini-value small">72% Veh</div>
+              <div className="mini-meta">28% Ped</div>
+            </div>
+          </div>
+
+          <div className="chart-panel panel">
+            <div className="chart-header">
+              <h3>Real-Time AI Ingestion Frequency (Detections Over Time)</h3>
+              <div className="chart-legend">
+                <span>Vehicle Plates</span>
+                <span>Pedestrians</span>
+                <span>Total Events</span>
+              </div>
+            </div>
+            <div className="chart-surface" role="img" aria-label={`Chart for ${chartMode} over ${timeRange}`}>
+              <svg viewBox="0 0 900 220" preserveAspectRatio="none" className="chart-svg">
+                {[0, 1, 2, 3, 4].map((row) => (
+                  <line key={row} x1="0" y1={row * 55 + 25} x2="900" y2={row * 55 + 25} stroke="rgba(148,163,184,0.15)" strokeDasharray="4 6" />
+                ))}
+                {chartData.series.map((series, idx) => {
+                  const colorMap = ["#38bdf8", "#8b5cf6", "#fbbf24"]; 
+                  const points = series.values
+                    .map((value, index) => {
+                      const x = (index / (series.values.length - 1)) * 860 + 20;
+                      const y = 190 - (value / Math.max(...chartData.series.flatMap((s) => s.values), 1)) * 150;
+                      return `${x},${y}`;
+                    })
+                    .join(" ");
+
+                  return (
+                    <polyline
+                      key={series.name}
+                      fill="none"
+                      stroke={colorMap[idx % colorMap.length]}
+                      strokeWidth={idx === 2 ? 2.2 : 2}
+                      points={points}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  );
+                })}
+              </svg>
             </div>
           </div>
 
@@ -371,14 +554,6 @@ export default function Dashboard() {
           <EventFeed events={filteredEvents} />
         </div>
 
-        <div className="col-side">
-          <AlertsPanel
-            alerts={alerts}
-            newAlertCount={summary.alerts_new}
-            onAcknowledge={acknowledge}
-            onResolve={resolve}
-          />
-        </div>
       </div>
     </div>
   );
