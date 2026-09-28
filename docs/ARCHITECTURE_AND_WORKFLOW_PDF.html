@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ARCHITECTURE & WORKFLOW — Unified Camera Intelligence Platform</title>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'base',
+      securityLevel: 'loose',
+      flowchart: { useMaxWidth: true, htmlLabels: true },
+      er: { useMaxWidth: true },
+      sequence: { useMaxWidth: true }
+    });
+  </script>
+  <style>
+    :root {
+      --primary: #0c5ea8;
+      --accent: #dfeaf7;
+      --ink: #1f2937;
+      --muted: #526073;
+      --line: #d9e2ec;
+      --panel: #f7fafd;
+      --code: #f3f4f6;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: white;
+      color: var(--ink);
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.55;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .page {
+      width: 8.5in;
+      min-height: 11in;
+      background: white;
+      padding: 0.7in 0.8in 0.5in 0.8in;
+      border: 1px solid #edf2f7;
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
+    }
+
+    h1 {
+      margin: 0 0 10px 0;
+      font-size: 29px;
+      color: var(--primary);
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+
+    h2 {
+      margin: 32px 0 14px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--line);
+      font-size: 20px;
+      color: var(--primary);
+      page-break-after: avoid;
+    }
+
+    h3 {
+      margin: 16px 0 8px;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    p, li {
+      font-size: 12.5px;
+      color: var(--ink);
+    }
+
+    p {
+      margin: 0 0 10px 0;
+      text-align: justify;
+    }
+
+    ul, ol {
+      margin: 8px 0 12px 18px;
+      padding-left: 8px;
+    }
+
+    li { margin-bottom: 6px; }
+
+    code {
+      font-family: Consolas, "Courier New", monospace;
+      background: var(--code);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    .note {
+      margin: 14px 0 22px 0;
+      padding: 12px 16px;
+      background: #edf5ff;
+      border-left: 4px solid var(--primary);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.5;
+    }
+
+    .toc {
+      margin: 18px 0 10px;
+      padding: 12px 14px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .toc-title {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .toc ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+      font-size: 11.5px;
+    }
+
+    .toc li {
+      margin: 4px 0;
+      color: var(--muted);
+    }
+
+    .diagram-wrap {
+      margin: 14px 0 18px 0;
+      padding: 12px;
+      background: #fafbfd;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: auto;
+      page-break-inside: avoid;
+    }
+
+    .mermaid {
+      min-height: 250px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    pre, .sql-box {
+      margin: 12px 0 16px;
+      background: var(--code);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px 14px;
+      overflow-x: auto;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 11px;
+      color: var(--ink);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .footer {
+      margin-top: 32px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      text-align: center;
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    @media print {
+      body {
+        padding: 0;
+      }
+      .page {
+        box-shadow: none;
+        border: none;
+        width: 100%;
+        min-height: auto;
+        padding: 0.55in 0.6in 0.4in 0.6in;
+      }
+      .toc, .diagram-wrap, pre, .note {
+        break-inside: avoid;
+      }
+      h2 { break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>ARCHITECTURE &amp; WORKFLOW</h1>
+    <p style="text-align:center; font-size: 12px; color: var(--muted); font-style: italic; margin-bottom: 10px;">Unified Camera Intelligence Platform</p>
+
+    <div class="note">
+      <strong>Note on this copy:</strong> This document describes the target architecture (including Redis/Kafka as the real-time bus). The actual code in this repo is a Docker-free prototype that uses SQLite instead of Postgres and an in-process WebSocket broadcaster instead of Redis — see the root <code>README.md</code> for exactly what's real vs. simplified in this build, and the “SWAP-IN POINT” comments in <code>backend/app/dedup.py</code> and <code>backend/app/websocket_manager.py</code> for how to upgrade to the design below.
+    </div>
+
+    <div class="toc">
+      <div class="toc-title">Contents</div>
+      <ul>
+        <li>1. High-Level Component Diagram</li>
+        <li>2. Entity-Relationship Diagram</li>
+        <li>3. Event Lifecycle (Sequence)</li>
+        <li>4. Where a Real AI Model Plugs In</li>
+        <li>5. Deduplication Logic (detail)</li>
+        <li>6. Movement Tracking Query</li>
+        <li>7. Folder Structure</li>
+      </ul>
+    </div>
+
+    <h2>1. High-Level Component Diagram</h2>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+flowchart LR
+    subgraph Cameras
+        C1[Real/Simulated Camera 1 - RTSP]
+        C2[Real/Simulated Camera 2 - RTSP]
+    end
+
+    subgraph VideoBridge [MediaMTX]
+        direction TB
+        VB[RTSP in -> HLS/WebRTC out]
+    end
+
+    subgraph Detector [Mock Detector Service]
+        D1[Emits synthetic ANPR/person events]
+    end
+
+    subgraph Backend [FastAPI Backend]
+        API[REST API]
+        WS[WebSocket Gateway]
+        ING[Event Ingest + Dedup + Watchlist Match]
+    end
+
+    subgraph Data
+        PG[(PostgreSQL)]
+        RD[(Redis: cache, pub/sub, dedup keys)]
+    end
+
+    subgraph Frontend [React Dashboard]
+        UI[Video tiles, Map, Alerts, Search]
+    end
+
+    C1 --> VB
+    C2 --> VB
+    VB --> UI
+    D1 -->|POST /events/ingest| ING
+    ING --> PG
+    ING --> RD
+    RD --> WS
+    WS --> UI
+    UI -->|REST calls| API
+    API --> PG
+      </div>
+    </div>
+
+    <h2>2. Entity-Relationship Diagram</h2>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+erDiagram
+    USERS ||--o{ CAMERAS : "manages"
+    CAMERAS ||--o{ EVENTS : "produces"
+    CAMERAS ||--o{ CAMERA_STATUS_LOG : "has"
+    EVENTS ||--o| ALERTS : "may trigger"
+    WATCHLIST ||--o{ ALERTS : "matched by"
+    USERS ||--o{ ALERTS : "acknowledges"
+
+    USERS {
+        uuid id PK
+        string email
+        string password_hash
+        string role "admin|operator"
+        datetime created_at
+    }
+    CAMERAS {
+        string id PK
+        string name
+        float lat
+        float lng
+        string address_label
+        string type "fixed|ptz"
+        string stream_url
+        string protocol "rtsp|onvif|hls"
+        string status "online|offline|degraded"
+        datetime created_at
+        datetime updated_at
+    }
+    CAMERA_STATUS_LOG {
+        uuid id PK
+        string camera_id FK
+        string old_status
+        string new_status
+        datetime changed_at
+    }
+    EVENTS {
+        uuid id PK
+        string camera_id FK
+        string entity_type "vehicle_plate|person"
+        string entity_value
+        float confidence
+        jsonb bounding_box
+        string snapshot_url
+        datetime detected_at
+        datetime last_seen_at
+    }
+    WATCHLIST {
+        uuid id PK
+        string entity_type
+        string entity_value
+        string reason
+        string severity "low|medium|high"
+        boolean active
+        string added_by FK
+        datetime added_at
+    }
+    ALERTS {
+        uuid id PK
+        uuid event_id FK
+        uuid watchlist_id FK
+        string camera_id FK
+        string status "new|acknowledged|resolved"
+        string acknowledged_by FK
+        datetime acknowledged_at
+        datetime created_at
+    }
+      </div>
+    </div>
+
+    <h2>3. Event Lifecycle (Sequence)</h2>
+    <div class="diagram-wrap">
+      <div class="mermaid">
+sequenceDiagram
+    participant Det as Detector Service
+    participant API as Backend API
+    participant Redis
+    participant DB as PostgreSQL
+    participant WS as WebSocket Gateway
+    participant UI as Dashboard
+
+    Det->>API: POST /events/ingest {camera_id, entity_value, ...}
+    API->>API: Validate payload schema
+    API->>Redis: Check dedup key (camera_id+entity_value)
+    alt duplicate within window
+        API->>DB: UPDATE events.last_seen_at
+    else new sighting
+        API->>DB: INSERT event
+        API->>DB: Query active watchlist for match
+        alt match found
+            API->>DB: INSERT alert (status=new)
+            API->>Redis: PUBLISH alert.created
+        end
+        API->>Redis: PUBLISH event.created
+    end
+    Redis-->>WS: fan-out message
+    WS-->>UI: push over WebSocket
+    UI->>UI: update live feed / alert panel instantly
+      </div>
+    </div>
+
+    <h2>4. Where a Real AI Model Plugs In</h2>
+    <p>The mock <code>detector-service</code> is the <strong>only</strong> component a real ANPR/person detection model replaces. It must keep POSTing the exact same JSON contract (Section 4.5 of <code>PROJECT_PROMPT.md</code>) to <code>/events/ingest</code>. Nothing downstream (backend validation, dedup, watchlist matching, alerting, dashboard) needs to change. This boundary is what keeps “no model training” honest while still producing a realistic, wire-compatible system.</p>
+
+    <h2>5. Deduplication Logic (detail)</h2>
+    <ol>
+      <li>On each incoming event, compute key <code>dedup:{camera_id}:{entity_value}</code>.</li>
+      <li>If the key exists in Redis (TTL = dedup window, default 30s):
+        <ul>
+          <li>Update the existing <code>events.last_seen_at</code> in Postgres.</li>
+          <li>Do <strong>not</strong> insert a new event row.</li>
+          <li>Do <strong>not</strong> create a new alert if one is already <code>new</code> or <code>acknowledged</code> for that event.</li>
+          <li>Refresh the Redis key’s TTL (sliding window).</li>
+        </ul>
+      </li>
+      <li>If the key does not exist:
+        <ul>
+          <li>Insert a new <code>events</code> row.</li>
+          <li>Set the Redis key with the TTL.</li>
+          <li>Proceed to watchlist matching as normal.</li>
+        </ul>
+      </li>
+    </ol>
+
+    <h2>6. Movement Tracking Query</h2>
+    <p>Given an <code>entity_value</code> (e.g., a plate number), movement tracking is simply:</p>
+    <div class="sql-box">SELECT e.detected_at, c.name, c.lat, c.lng
+FROM events e
+JOIN cameras c ON c.id = e.camera_id
+WHERE e.entity_value = :value
+ORDER BY e.detected_at ASC;</div>
+    <p>The frontend draws a polyline through the resulting <code>(lat, lng)</code> points in order and drops a timestamped marker at each stop. No separate “tracking engine” is needed at this scale — see <code>SCALABILITY_AND_SECURITY.md</code> for how this changes at 80,000 cameras.</p>
+
+    <h2>7. Folder Structure</h2>
+    <pre>/backend
+  /app
+    /api          # route modules: cameras, events, alerts, watchlist, auth
+    /core         # config, security, websocket manager
+    /models       # SQLAlchemy models
+    /schemas      # Pydantic schemas
+    /services     # dedup, watchlist matching, health-checker
+  /migrations     # Alembic
+  /tests
+/frontend
+  /src
+    /components   # VideoTile, MapView, AlertPanel, SearchBar, EventTable
+    /hooks        # useWebSocket, useCameras, useAlerts
+    /pages        # Dashboard, CameraRegistry, Login
+/camera-simulator
+  docker-compose fragment + ffmpeg configs for 2 synthetic streams
+/detector-service
+  main.py         # emits synthetic events on an interval
+/docs
+  diagrams, ER exports
+docker-compose.yml
+README.md</pre>
+
+    <div class="footer">
+      Unified Camera Intelligence Platform — Architecture &amp; Workflow Documentation
+    </div>
+  </div>
+</body>
+</html>
