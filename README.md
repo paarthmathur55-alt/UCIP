@@ -1,4 +1,4 @@
-# UCIP — Unified Camera Intelligence Platform (Prototype, no Docker)
+# UCIP — Unified Camera Intelligence Platform (Prototype)
 
 A working prototype of a CCTV registry + AI-detection + watchlist-alerting
 platform: camera registry with a GIS map, a unified operator dashboard,
